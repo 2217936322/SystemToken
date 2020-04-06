@@ -11,7 +11,7 @@ a new process with that token is created. This will result in a SYSTEM shell.
 
 ## System Requirements
 
-This code was tested on a Windows 10 x64 machine.  
+This code was tested on a Windows 10 x64 machine using Visual Studio 2019.  
 Must be run with UAC bypassed and Local Admin privileges.
 
 ## Usage
