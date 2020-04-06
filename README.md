@@ -11,8 +11,7 @@ a new process with that token is created. This will result in a SYSTEM shell.
 
 ## System Requirements
 
-This code was tested on a Windows 10 x64 machine
-Must be run with UAC bypassed and Local Admin privileges
+This code was tested on a Windows 10 x64 machine.  Must be run with UAC bypassed and Local Admin privileges.
 
 ## Usage
 
@@ -20,5 +19,4 @@ Compile and run SystemToken.exe
 
 ## References
 
-This work is based on the research done by [Justin Bui from SpecterOps](https://posts.specterops.io/understanding-and-defending-against-access-token-theft-finding-alternatives-to-winlogon-exe-80696c8a73b)
-https://docs.microsoft.com/en-us/windows/win32/secauthz/access-tokens
+This work is based on the research done by [Justin Bui from SpecterOps](https://posts.specterops.io/understanding-and-defending-against-access-token-theft-finding-alternatives-to-winlogon-exe-80696c8a73b)  https://docs.microsoft.com/en-us/windows/win32/secauthz/access-tokens
