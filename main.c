@@ -1,14 +1,3 @@
-/***************************************************************************************
-Title: SystemToken
-Scenario: Assuming UAC bypass and Local Admin has been achieved, this code will
-		  will dump all the processes running on the machine, save them to memory
-		  in a list, and find the first process whose user is SYSTEM and owner
-		  Local Admin. Such a process will allow for the token to be duplicated
-		  and a SYSTEM shell obtained
-Credits: The code is based on the excellent research by Justin Bui from Specterops and
-		 hours spent on msdn Win API documentation	
-****************************************************************************************/
-
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <stdio.h>
