@@ -22,6 +22,8 @@ typedef struct _protected_process {
 	PROCESSENTRY32 pprotected;
 } protected_process;
 
+int system_check_flag = 0;
+
 
 int main(void) {
 	process* head, * position = NULL;
@@ -87,9 +89,12 @@ int main(void) {
 		next_entry->next = NULL;
 		position->next = next_entry;
 
-		system_process = system_check(each_process);
-		if (!system_process)
-			continue;
+		//after finding the System process once we ignore the system_check function going forward
+		if (!system_check_flag) {
+			system_process = system_check(each_process);
+			if (!system_process)
+				continue;
+		}
 
 		int protection_result = protected_check(each_process.th32ProcessID);
 		if (protection_result) {
@@ -114,16 +119,15 @@ int protected_check(DWORD pid) {
 	return 0;
 }
 
-//this function serves to skip over the "System" process
+//This function serves to skip over the "System" process
 //Trying to steal its token fails and delays code execution
+//Once this function returns FALSE it means the System process
+//has been found and this function is no longer needed
 BOOL system_check(PROCESSENTRY32 process) {
 	CHAR *system_process = "System";
 	int comparison = 0;
 
-	//printf("------------------------------------------------------------\n"); //uncomment these lines to see which processes enumerated
-	//printf("Name: ");
 	for (int i = 0; i < MAX_PATH; i++) {
-		//printf("%c", process.szExeFile[i]);
 		if (process.szExeFile[i] == '\0')
 			break;
 		else if (process.szExeFile[i] == *system_process) {
@@ -131,10 +135,12 @@ BOOL system_check(PROCESSENTRY32 process) {
 			comparison++;
 		}
 		else
-			continue;
+			break;
 	}
-	if (wcslen(process.szExeFile) == comparison)
+	if (wcslen(process.szExeFile) == comparison) {
+		system_check_flag++;
 		return FALSE;
+	}
 	return TRUE;
 }
 
