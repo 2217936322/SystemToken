@@ -150,8 +150,8 @@ BOOL GetUserInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 	DWORD token_size, name_size = NAME_ARRAY, domain_size = NAME_ARRAY;
 	PTOKEN_USER token_user;
 	SID_NAME_USE sid_type;
-	SecureZeroMemory(account_name, NAME_ARRAY);
-	SecureZeroMemory(domain_name, NAME_ARRAY);
+	int comparison = 0;
+	PTCHAR arr_cmp = L"SYSTEM";
 
 	GetTokenInformation(token, TokenUser, NULL, 0, &token_size);
 	token_user = (PTOKEN_USER)malloc(token_size);
@@ -168,8 +168,6 @@ BOOL GetUserInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 	}
 	free(token_user);
 
-	int comparison = 0;
-	PTCHAR arr_cmp = L"SYSTEM";
 	int arr_length = wcslen(account_name);
 
 	for (int z = 0; z < NAME_ARRAY; z++) {
@@ -187,8 +185,6 @@ BOOL GetUserInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 		return TRUE;
 	else
 		return FALSE;
-
-
 }
 
 //this function's objective is to get the owner of the process and check if
@@ -197,6 +193,8 @@ BOOL GetOwnerInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 	DWORD token_size = NULL, name_size = NAME_ARRAY, domain_size = NAME_ARRAY;
 	PTOKEN_OWNER token_owner;
 	SID_NAME_USE sid_type;
+	int comparison = 0;
+	PTCHAR arr_cmp = L"Administrators";
 	SecureZeroMemory(account_name, NAME_ARRAY);
 	SecureZeroMemory(domain_name, NAME_ARRAY);
 
@@ -214,8 +212,6 @@ BOOL GetOwnerInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 	}
 	free(token_owner);
 
-	int comparison = 0;
-	PTCHAR arr_cmp = L"Administrators";
 	int arr_length = wcslen(account_name);
 
 	for (int z = 0; z < NAME_ARRAY; z++) {
@@ -233,7 +229,6 @@ BOOL GetOwnerInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 		return TRUE;
 	else
 		return FALSE;
-
 }
 
 //This function will attempt to duplicate a SYSTEM token and create 
