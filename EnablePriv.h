@@ -3,8 +3,6 @@
 #include<stdio.h>
 #include<securitybaseapi.h>
 
-#define ANYSIZE_ARRAY 3
-
 BOOL EnablePriv(void) {
 	LUID debug_value, restore_value;
 	BOOL lookup_debug, lookup_restore, token_info;
@@ -41,12 +39,14 @@ BOOL EnablePriv(void) {
 			printf("[+] SeDebugPrivilege Found\n");
 			DebugFound++;
 		}
-		if ((all_token_privs->Privileges[x].Luid.LowPart == restore_value.LowPart) && (all_token_privs->Privileges[x].Luid.HighPart == restore_value.HighPart)) {
+		else if ((all_token_privs->Privileges[x].Luid.LowPart == restore_value.LowPart) && (all_token_privs->Privileges[x].Luid.HighPart == restore_value.HighPart)) {
 			printf("[+] SeRestorePrivilege Found\n");
 			RestoreFound++;
 		}
-		if (DebugFound == 1 && RestoreFound == 1)
+		else if (DebugFound == 1 && RestoreFound == 1)
 			break;
+		else
+			continue;
 	}
 
 	if (!DebugFound) {
@@ -58,13 +58,15 @@ BOOL EnablePriv(void) {
 		return FALSE;
 	}
 
-	//change the token privilege for SeDebug & SeRestore
+	//change the token privilege for SeRestore then
 	//define the new token struct
-	my_token.PrivilegeCount = 2;
-	my_token.Privileges[0].Luid = debug_value;
+	//to enable more than 1 privilege at a time, change the
+	//ANYSIZE_ARRAY definition in winnt.h 
+	my_token.PrivilegeCount = 1;
+	my_token.Privileges[0].Luid = restore_value;
 	my_token.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	my_token.Privileges[1].Luid = restore_value;
-	my_token.Privileges[1].Attributes = SE_PRIVILEGE_ENABLED;
+	//my_token.Privileges[1].Luid = debug_value;
+	//my_token.Privileges[1].Attributes = SE_PRIVILEGE_ENABLED;
 	p_mytoken = &my_token;
 
 	//now change the token 

